@@ -1,0 +1,58 @@
+# Archivo .gitignore del proyecto (Drupal 11 + DDEV)
+
+# ------------------------------------------------------------------
+# Composer
+# ------------------------------------------------------------------
+/vendor/
+/composer.phar
+
+# ------------------------------------------------------------------
+# Overrides locales de Drupal (settings.php sí se versiona)
+# ------------------------------------------------------------------
+/web/sites/*/settings.local.php
+/web/sites/*/services.yml
+/web/sites/default/settings.ddev.php
+/web/sites/simpletest
+/web/sites/*/private
+
+# ------------------------------------------------------------------
+# Archivos subidos por usuarios. Se conserva el .htaccess de seguridad
+# y sync/ (config_sync_directory, config exportada de Drupal).
+# ------------------------------------------------------------------
+/web/sites/default/files/*
+!/web/sites/default/files/.htaccess
+!/web/sites/default/files/sync/
+
+# ------------------------------------------------------------------
+# Entorno local y secretos
+# ------------------------------------------------------------------
+/.env
+/.env.local
+/.env.*.local
+
+# ------------------------------------------------------------------
+# DDEV: solo configuración local. La config del proyecto
+# (.ddev/config.yaml, comandos, builds) sí se versiona; los archivos
+# locales adicionales los filtra .ddev/.gitignore.
+# ------------------------------------------------------------------
+/.ddev/config.local.*
+/.ddev/*.local.yaml
+/.ddev/*.local.yml
+
+# ------------------------------------------------------------------
+# Sistema e IDE
+# ------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+/.idea/
+/.vscode/
+
+# ------------------------------------------------------------------
+# Node.js (futuro front-end)
+# ------------------------------------------------------------------
+/node_modules/
+/npm-debug.log*
+/yarn-error.log
