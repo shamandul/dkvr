@@ -1,0 +1,5 @@
+name: Environment Info
+type: module
+description: 'Bloque que muestra el entorno, la versión (tag de git) y la rama actual.'
+package: Custom
+core_version_requirement: ^11

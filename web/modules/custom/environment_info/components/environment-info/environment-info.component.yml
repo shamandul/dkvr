@@ -1,0 +1,29 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+
+name: Environment Info
+description: 'Muestra el entorno, la versión obtenida del tag de git y la rama actual.'
+status: stable
+
+props:
+  type: object
+  properties:
+    attributes:
+      type: Drupal\Core\Template\Attribute
+      title: Atributos
+      description: Atributos del elemento contenedor.
+    environment:
+      type: string
+      title: Entorno
+      description: Entorno donde se está ejecutando el sitio.
+    version:
+      type: string
+      title: Versión
+      description: Versión obtenida del tag de git.
+    branch:
+      type: string
+      title: Rama
+      description: Rama de git actual.
+  required:
+    - environment
+    - version
+    - branch

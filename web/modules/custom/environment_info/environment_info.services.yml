@@ -1,0 +1,5 @@
+services:
+  environment_info.build_info:
+    class: Drupal\environment_info\BuildInfo
+    arguments:
+      - '%app.root%'

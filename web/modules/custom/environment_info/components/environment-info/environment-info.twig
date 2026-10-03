@@ -1,0 +1,17 @@
+{% set container_attributes = (attributes ?? create_attribute()).addClass('environment-info', 'environment-info--' ~ (environment|clean_class)) %}
+<div{{ container_attributes }}>
+  <ul class="environment-info__list">
+    <li class="environment-info__item">
+      <span class="environment-info__label">{{ 'Entorno'|t }}</span>
+      <span class="environment-info__value environment-info__value--environment">{{ environment }}</span>
+    </li>
+    <li class="environment-info__item">
+      <span class="environment-info__label">{{ 'Versión'|t }}</span>
+      <span class="environment-info__value">{{ version|default('—') }}</span>
+    </li>
+    <li class="environment-info__item">
+      <span class="environment-info__label">{{ 'Rama'|t }}</span>
+      <span class="environment-info__value">{{ branch|default('—') }}</span>
+    </li>
+  </ul>
+</div>
