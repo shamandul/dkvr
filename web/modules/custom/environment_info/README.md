@@ -22,17 +22,57 @@ Valores soportados: `dev`, `int`, `pre`, `pro`.
 | Entorno | Dónde se configura |
 |---------|--------------------|
 | `dev`   | `.ddev/config.yaml` → `web_environment: [APP_ENV=dev]` (requiere `ddev restart`) |
+| `pre`   | Docker Compose propio → `environment: APP_ENV=pre` en el servicio web (ver ejemplo) |
 | `int`   | Variable de entorno del despliegue (aún no definido) |
-| `pre`   | Variable de entorno del despliegue (aún no definido) |
 | `pro`   | Variable de entorno del despliegue (aún no definido) |
 
-Cuando exista el despliegue de int/pre/pro, `APP_ENV` debe inyectarse en el
+### Ejemplo: Docker Compose (pre)
+
+En el `docker-compose.yml` del entorno pre, servicio web:
+
+```yaml
+services:
+  web:
+    image: php:8.4-fpm
+    environment:
+      APP_ENV: pre
+```
+
+O con fichero `.env` (así se pueden tener int/pre/pro con el mismo compose):
+
+```yaml
+services:
+  web:
+    environment:
+      APP_ENV: ${APP_ENV}
+```
+
+```dotenv
+# .env de pre
+APP_ENV=pre
+```
+
+Comprobar que PHP-FPM lo recibe (si sale vacío, `clear_env = yes` lo está
+limpiando):
+
+```bash
+docker compose exec web php -r 'echo getenv("APP_ENV");'   # debe imprimir: pre
+```
+
+Si está vacío, añadir al pool FPM (`www.conf`):
+
+```ini
+clear_env = no
+; o explícitamente:
+env[APP_ENV] = pre
+```
+
+Cuando exista el despliegue de int/pro, `APP_ENV` debe inyectarse en el
 contenedor o servidor:
 
-- Docker Compose: `environment: [APP_ENV=int]` en el servicio web.
 - Kubernetes: `env: [{name: APP_ENV, value: "int"}]` en el Pod/Deployment.
 - CI/CD: variable de entorno del job de despliegue.
-- PHP-FPM: si se usa FPM con `clear_env = yes` (por defecto), declarar
+- PHP-FPM: si se usa FPM con `clear_env = yes`, declarar
   `env[APP_ENV] = int` en `www.conf` o `clear_env = no`, si no la variable no
   llega a PHP y el bloque mostrará `unknown`.
 
