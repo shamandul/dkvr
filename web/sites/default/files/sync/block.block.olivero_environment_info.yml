@@ -1,0 +1,20 @@
+uuid: 6686841e-0221-48d0-94dd-8fa9cc55fffc
+langcode: en
+status: true
+dependencies:
+  module:
+    - environment_info
+  theme:
+    - olivero
+id: olivero_environment_info
+theme: olivero
+region: footer_bottom
+weight: 0
+provider: null
+plugin: environment_info
+settings:
+  id: environment_info
+  label: ''
+  label_display: '0'
+  provider: environment_info
+visibility: {  }

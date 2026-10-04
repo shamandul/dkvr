@@ -32,7 +32,7 @@ final class BuildInfo {
         return mb_strtolower($value);
       }
     }
-    return getenv('IS_DDEV_PROJECT') ? 'dev' : 'prod';
+    return 'unknown';
   }
 
   private function resolveVersion(): string {

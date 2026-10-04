@@ -33,12 +33,25 @@
   color: #7ee787;
 }
 
+.environment-info--int .environment-info__value--environment {
+  color: #79c0ff;
+}
+
+.environment-info--pre .environment-info__value--environment {
+  color: #ffa657;
+}
+
 .environment-info--staging .environment-info__value--environment,
 .environment-info--test .environment-info__value--environment {
   color: #f2cc60;
 }
 
+.environment-info--pro .environment-info__value--environment,
 .environment-info--prod .environment-info__value--environment,
 .environment-info--production .environment-info__value--environment {
   color: #ff7b72;
+}
+
+.environment-info--unknown .environment-info__value--environment {
+  color: #8b949e;
 }
