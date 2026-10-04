@@ -1,0 +1,39 @@
+# Configuration as Code: admin local + job dkvr-deploy (Jenkinsfile desde SCM)
+jenkins:
+  systemMessage: "CI de Drupal-Kafka: despliega shamandul/dkvr en docker-compose y Minikube (job: dkvr-deploy)."
+  numExecutors: 2
+  mode: NORMAL
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "${JENKINS_ADMIN_ID}"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+unclassified:
+  location:
+    url: http://localhost:8081/
+
+jobs:
+  - script: |
+      pipelineJob('dkvr-deploy') {
+        description('Despliega el codigo de Drupal del repo shamandul/dkvr en docker-compose y en Minikube. Disparo manual (Build with Parameters) o automatico cada 5 minutos; el cron solo redespliega si hay commits nuevos.')
+        keepDependencies(false)
+        definition {
+          cpsScm {
+            lightweight(true)
+            scriptPath('Jenkinsfile')
+            scm {
+              git {
+                remote {
+                  url('https://github.com/shamandul/dkvr.git')
+                }
+                branches('*/ci')
+              }
+            }
+          }
+        }
+      }

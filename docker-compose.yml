@@ -1,0 +1,114 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: ${REDIS_IMAGE}
+
+  kafka:
+    image: ${KAFKA_IMAGE}
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+  drupal:
+    build:
+      context: ./docker/drupal
+      args:
+        DRUPAL_GIT_URL: ${DRUPAL_GIT_URL:?Completa DRUPAL_GIT_URL en .env}
+        DRUPAL_GIT_REF: ${DRUPAL_GIT_REF:-main}
+    environment:
+      DB_HOST: postgres
+      DB_PORT: ${DRUPAL_DB_PORT:-5432}
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_HOST: redis
+      KAFKA_HOST: kafka:9092
+      DRUPAL_SETTINGS_MODE: ${DRUPAL_SETTINGS_MODE:-auto}
+      DRUPAL_TRUSTED_HOSTS: ${DRUPAL_TRUSTED_HOSTS:-drupal.local,localhost,127.0.0.1}
+      DRUPAL_HASH_SALT: ${DRUPAL_HASH_SALT:-}
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    ports:
+      - "8080:80"
+    volumes:
+      # Docroot web/ del repo. Si cambia el docroot, ajusta esta ruta.
+      - drupal_files:/var/www/html/web/sites/default/files
+
+  varnish:
+    image: ${VARNISH_IMAGE}
+    environment:
+      VARNISH_HTTP_PORT: 6081
+    depends_on:
+      - drupal
+    ports:
+      - "6081:6081"
+    volumes:
+      - ./docker/varnish/default.vcl:/etc/varnish/default.vcl
+
+  # CI: arranca solo con `docker compose --profile ci up -d` (ver README).
+  # Necesita docker.sock (CLI + compose v2 dentro de la imagen), ~/.kube y
+  # ~/.minikube (kubectl/minikube) montados con sus rutas originales para que
+  # funcionen las rutas absolutas del kubeconfig.
+  jenkins:
+    build:
+      context: ./docker/jenkins
+    profiles:
+      - ci
+    environment:
+      JAVA_OPTS: -Xmx512m -Djenkins.install.runSetupWizard=false
+      JENKINS_ADMIN_ID: ${JENKINS_ADMIN_ID:-admin}
+      JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD:-Kafka123!}
+      CASC_JENKINS_CONFIG: /var/jenkins_home/jenkins.yaml
+      KUBECONFIG: /home/jesus/.kube/config
+      MINIKUBE_HOME: /home/jesus/.minikube
+      COMPOSE_PROJECT_NAME: drupal-kafka
+    ports:
+      - "8081:8080"
+      - "50000:50000"
+    extra_hosts:
+      - "drupal.local:192.168.49.2"
+      - "host.docker.internal:host-gateway"
+    group_add:
+      - "${DOCKER_GID:-958}"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - ./docker/jenkins/jenkins.yaml:/var/jenkins_home/jenkins.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/jesus/.kube:/home/jesus/.kube:rw
+      - /home/jesus/.minikube:/home/jesus/.minikube:rw
+    depends_on:
+      - drupal
+      - postgres
+    networks:
+      - default
+      # La red del nodo de Minikube: sin ella los contenedores no pueden
+      # enrutarse hasta 192.168.49.2 (kubectl, minikube image build, ingress).
+      # Requiere que Minikube este levantado (la red es externa).
+      - minikube
+
+volumes:
+  postgres_data:
+  drupal_files:
+  jenkins_home:
+
+networks:
+  minikube:
+    external: true

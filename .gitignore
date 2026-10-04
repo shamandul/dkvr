@@ -1,0 +1,7 @@
+# Marcador del Jenkinsfile: sha upstream del ultimo despliegue correcto
+last_deployed_sha.txt
+
+# Basura del sistema
+*.log
+.DS_Store
+__pycache__/

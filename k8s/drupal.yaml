@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: drupal-files
+  namespace: drupal
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: drupal
+  namespace: drupal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: drupal
+  template:
+    metadata:
+      labels:
+        app: drupal
+    spec:
+      containers:
+        - name: drupal
+          image: drupal-kafka:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            # Docroot web/ del repo. Si cambia el docroot, ajusta esta ruta.
+            - name: files
+              mountPath: /var/www/html/web/sites/default/files
+          env:
+            - name: DB_HOST
+              value: postgres
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: drupal
+            - name: DB_USER
+              value: drupal
+            - name: DB_PASSWORD
+              value: drupal_password
+            - name: REDIS_HOST
+              value: redis
+            - name: KAFKA_HOST
+              value: kafka:9092
+            - name: DRUPAL_SETTINGS_MODE
+              value: force
+            - name: DRUPAL_TRUSTED_HOSTS
+              value: drupal.local,localhost,127.0.0.1
+            # TODO: usar un Secret en producción.
+            - name: DRUPAL_HASH_SALT
+              value: cambia-esto-en-produccion
+      volumes:
+        - name: files
+          persistentVolumeClaim:
+            claimName: drupal-files
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: drupal
+  namespace: drupal
+spec:
+  selector:
+    app: drupal
+  ports:
+    - port: 80
+      targetPort: 80
